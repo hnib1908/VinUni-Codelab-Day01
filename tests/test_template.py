@@ -207,7 +207,7 @@ class TestBatchCompareAndFormat(unittest.TestCase):
 
     def test_batch_runs_and_formats_table(self):
         with patch.object(_m, "compare_models") as mock_comp:
-            def _get_mock():
+            def _get_mock(prompt):
                 return {
                     "gpt4o": {"response": "GPT-4o response content here", "latency": 0.5, "cost": 0.00045, "input_tokens": 10, "output_tokens": 20},
                     "gpt4o_mini": {"response": "GPT-4o-Mini response content here", "latency": 0.3, "cost": 0.0000135, "input_tokens": 10, "output_tokens": 20},
@@ -218,6 +218,8 @@ class TestBatchCompareAndFormat(unittest.TestCase):
             results = batch_compare(["Q1", "Q2"])
             self.assertEqual(len(results), 2)
             self.assertEqual(results[0]["prompt"], "Q1")
+            self.assertEqual(results[1]["prompt"], "Q2")
+            self.assertEqual(mock_comp.call_args_list, [unittest.mock.call("Q1"), unittest.mock.call("Q2")])
 
             table = format_comparison_table(results)
             self.assertIsInstance(table, str)

@@ -1,5 +1,64 @@
 # Student Guide: Nền tảng LLM API (Step-by-Step Walkthrough)
 
+## Bản hoàn thiện Lab 01
+
+Đã triển khai 5 task chính và 3 bonus trong `starter-code/template.py`.
+File làm việc chính là `starter-code/template.py`; chạy không có `--mode` sẽ mở chatbot Gemini.
+`solution-code/solution.py` là bản sao nộp trước đó và được bộ test ưu tiên sử dụng.
+
+Chạy từ thư mục gốc dự án bằng PowerShell:
+
+```powershell
+# Kiểm tra offline: giả lập API, không cần API key.
+.\.venv\Scripts\python.exe -m pytest tests/ -v
+
+# Chỉ dùng Gemini: cấu hình GEMINI_API_KEY trong .env.
+.\.venv\Scripts\python.exe starter-code/template.py --mode chat
+.\.venv\Scripts\python.exe starter-code/template.py --mode gemini --prompt "Token là gì?"
+
+# So sánh cần cả OPENAI_API_KEY và GEMINI_API_KEY.
+.\.venv\Scripts\python.exe starter-code/template.py --mode compare
+.\.venv\Scripts\python.exe starter-code/template.py --mode batch
+
+# Task 3 cần ANTHROPIC_API_KEY.
+.\.venv\Scripts\python.exe starter-code/template.py --mode anthropic
+```
+
+Nếu chưa có môi trường, làm theo mục 1 bên dưới. Mẫu biến môi trường nằm trong
+`.env.example`; giữ nguyên `.env` hiện có nếu đã cấu hình.
+
+Chatbot chạy bằng `gemini-3.5-flash-lite`, thay cho model 2.5 không còn khả dụng với
+tài khoản mới. Có thể đổi model chatbot bằng `GEMINI_CHAT_MODEL` trong `.env`,
+rồi khởi động lại chương trình. Các hàm so sánh vẫn giữ model/bảng giá theo đề.
+Chatbot đặt HTTP timeout 20 giây và tắt retry tự động của SDK để tránh chờ lặp
+nhiều lần. Khi timeout, chương trình báo lỗi và quay lại ô nhập; timeout HTTP
+áp dụng cho thao tác mạng, không phải giới hạn tổng độ dài một câu trả lời streaming.
+
+Chatbot in nội dung ngay khi nhận được từng chunk, giữ 3 cặp user/model gần nhất
+và gửi kèm câu hỏi hiện tại. Nhập `quit`, `exit`, hoặc nhấn Ctrl+C để thoát.
+Các lượt lỗi không được lưu vào lịch sử. Bonus retry thực hiện tối đa
+`1 + max_retries` lần gọi, chờ `base_delay`, `2 * base_delay`, `4 * base_delay`...
+Có thể dùng `retry_with_backoff(lambda: call_gemini("Xin chào"))` khi cần.
+
+Chi phí được tính theo **bảng giá cố định của đề** để khớp bộ chấm, không phải
+báo giá hiện hành của nhà cung cấp. Tên model mặc định cũng được giữ theo đề;
+các hàm gọi API nhận tham số `model` để dùng model khác khi cần.
+Riêng lệnh CLI `--mode compare` và `--mode batch` dùng `compare_live_models`,
+so sánh GPT-4o, GPT-4o-mini với model Gemini đang cấu hình trong `.env`.
+Cột chi phí là ước tính theo giá text trả phí, kiểm tra ngày 06/11/2026:
+GPT-4o: 2.50/10.00; GPT-4o-mini: 0.15/0.60; Gemini 3.5 Flash Lite: 0.30/2.50
+USD trên 1 triệu token đầu vào/đầu ra. Giá nằm ở `LIVE_PRICING_1M_TOKENS`
+trong `starter-code/template.py`, độc lập với bảng giá cũ của đề.
+Ước tính dựa trên token trả về; không phản ánh ưu đãi free tier, cache hoặc
+các khoản phí bổ sung. Đối chiếu hóa đơn nhà cung cấp để biết số tiền thực trừ.
+
+PDF nhắc tới `exercises.md`, nhưng file đó không có trong bản repo hiện tại.
+Phần ghi chú kiến thức nằm trong [LAB_NOTES.md](LAB_NOTES.md), không thay thế
+những câu hỏi chưa được cung cấp. Kết quả test offline không xác nhận quyền
+truy cập model hoặc hạn mức API của tài khoản.
+
+---
+
 > [!NOTE]
 > Tài liệu này được thiết kế để hỗ trợ bạn hoàn thành bài Lab 01 một cách nhanh chóng nhất. Hãy sử dụng nó làm cẩm nang khi triển khai các hàm trong `template.py`.
 
